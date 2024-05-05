@@ -1,0 +1,64 @@
+#!/bin/sh
+
+#===== Import our ASCII sequences ====#
+. "/System/Static/SequenceSource.sh"
+#===== Setup Orion-Native Paths ====#
+_USERNAME=$(id -un) # Don't use $USER as this can be forced upon us
+if [ "$_USERNAME" = "root" ]; then
+	export USER_PKGROOT="/System/AdminUser/Packages"
+else
+	export USER_PKGROOT="/User/$_USERNAME/Packages"
+fi
+
+BIN_LOCAL="/System/Local/Binaries"
+BIN_SYS="/System/Binaries/Rosetta:/System/Binaries"
+BIN_PKG="/Packages/Binaries:$USER_PKGROOT/Binaries"
+
+LIB_LOCAL="/System/Local/Libraries:/System/Local/Libraries/32Bit:/System/Local/Libraries/64Bit:/System/Local/Libraries/Exec"
+LIB_SYS="/System/Libraries:/System/Libraries/32Bit:/System/Libraries/64Bit"
+LIB_PKG="/Packages/Libraries:/Packages/Libraries/32Bit:/Packages/Libraries/64Bit:/Packages/Libraries/Exec:$USER_PKGROOT/Libraries:$USER_PKGROOT/Libraries/32Bit:$USER_PKGROOT/Libraries/64Bit:$USER_PKGROOT/Libraries/Exec"
+
+# Globally-installed binaries/libraries are more important than user-installed packages,
+# therefore they will load in a higher order.
+export PATH="$BIN_LOCAL:$BIN_SYS:$BIN_PKG"
+export LD_LIBRARY_PATH="$LIB_LOCAL:$LIB_SYS:$LIB_PKG"
+
+#===== Setup generic variables =====# 
+export EDITOR=vim
+export PAGER=less
+# If you wish to add your own variables, add them here.
+
+#===== Setup PS1 =====# 
+PATHCOL="$TXT_RESET$FG_YELLOW2"
+if [ "$(id -u)" -ne 0 ]; then
+	# REGULAR PS1
+	NAMECOL="$TXT_BOLD$FG_BLUE"
+else
+	#ROOT PS1
+	NAMECOL="$TXT_BOLD$FG_RED"
+fi
+
+# ZSH does things weirdly and breaks tthis
+if [ -n "$ZSH_VERSION" ]; then
+	# This will be using the shell built-in printf
+	# in ZSH to prevent somebody from messing with $PATH
+	# and breaking this
+
+	# Cheap & dirty trick
+	ZSH_NAMECOL=$(printf "$NAMECOL")
+	ZSH_PATHCOL=$(printf "$PATHCOL")
+	ZSH_RESET=$(printf "$TXT_RESET")
+	export PS1="$ZSH_NAMECOL$_USERNAME:$ZSH_PATHCOL%~>$ZSH_RESET "
+else
+	# Non ZSH
+	export PS1="$NAMECOL\u:$PATHCOL\w>$TXT_RESET "
+fi
+
+#===== Run additional login scripts =====# 
+umask 022
+for script in /etc/profile.d/*.sh ; do
+	if [ -r "$script" ] ; then
+		. "$script"
+	fi
+done
+unset script

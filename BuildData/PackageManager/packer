@@ -1,0 +1,108 @@
+#!/bin/sh
+###############################################################################
+##                           Copyright (c) 2024                              ##
+##                         Rosetta H&S Integrated                            ##
+###############################################################################
+##  Permission is hereby granted, free of charge, to any person obtaining    ##
+##        a copy of this software and associated documentation files         ##
+##  (the "Software"), to deal in the Software without restriction, including ##
+##     without limitation the right to use, copy, modify, merge, publish,    ##
+##     distribute, sublicense, and or sell copies of the Software, and to    ##
+##         permit persons to whom the Software is furnished to do so,        ##
+##                     subject to the following conditions:                  ##
+###############################################################################
+## The above copyright notice and this permission notice shall be included   ##
+##          in all copies or substantial portions of the Software.           ##
+###############################################################################
+## THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS   ##
+## OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF                ##
+## MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.    ##
+## IN NO EVENT SHALL THE   AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY    ##
+## CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT ##
+## OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR  ##
+## THE USE OR OTHER DEALINGS IN THE SOFTWARE.                                ##
+###############################################################################
+
+#===#===#===#===# Global Constants #===#===#===#===#
+readonly EXEC_NAME="${0##*/}"
+readonly EXEC_DIR=$(dirname $(realpath $0))
+export   DATA_DIR="$EXEC_DIR"
+export   APK_VERSION=$("$DATA_DIR/apk.static" --quiet --version)
+
+#===#===#===#===# Global Variables #===#===#===#===#
+ANSI=true
+VERBOSE=false
+AUTOYES=false
+
+#===#===#===#===# Load Commons #===#===#===#===#
+[ $_PKG_COMMON_LOADED ] || . "$EXEC_DIR/Common.sh"
+
+#===#===#===#===# Print Applets #===#===#===#===#
+Print_Applets() {
+    
+    APPLETS=$(ls "$DATA_DIR/Applets")
+    for APPLET in $APPLETS; do
+        APPLET_INFO=$("$DATA_DIR/Applets/$APPLET" --info)
+        line='        :'
+        printf "    %s %s %s\n" $APPLET "${line:${#APPLET}}" "$APPLET_INFO"
+    
+    done
+}
+
+#===#===#===#===# Usage #===#===#===#===#
+Packer_Usage() {
+    echo ""
+    echo "$EXEC_NAME v$EXEC_VER - The Package Manager for the Orion Operating System."
+    echo "  Copyright 2024 - Rosetta HSI. This software comes with absolutely"
+    echo "  NO WARRANTY and is released under the MIT License."
+    echo ""
+    echo "  This utility is a front-end for the Alpine Package Keeper"
+    echo "         ($APK_VERSION)"
+    echo ""
+    echo "  --- Usage: $EXEC_NAME <Applet> [options...]"
+    echo "       $ $EXEC_NAME add fortune -v"
+    echo "       $ $EXEC_NAME remove coreutils -Y"
+    # echo -e "  --- Usage: ${FG_GREEN2}$EXEC_NAME ${FG_RED2}<Applet>${TXT_RESET} [options...]"
+    # echo -e "       ${FG_BLUE2}$ ${FG_GREEN2}${EXEC_NAME} ${FG_RED2}add${TXT_RESET} fortune ${FG_YELLOW2}-v${TXT_RESET}"
+    # echo -e "       ${FG_BLUE2}$ ${FG_GREEN2}${EXEC_NAME} ${FG_RED2}remove${TXT_RESET} coreutils ${FG_YELLOW2}-Y${TXT_RESET}"
+    echo ""
+    echo "  --- Applets:"
+    Print_Applets
+    # echo "    add    : Add Packages from selected Repositories."
+    # echo "    remove : Remove Packages installed on this System."
+    # echo "    search : Search for Packages with a given search term."
+    # echo "    fetch  : Download Packages directly from selected Repositories."
+    echo ""
+    echo "  --- Global Flags:"
+    echo "    -h : Display this Help message."
+    echo ""
+    echo "    -Y : Automatically answers \"y\" to all prompts. DANGEROUS!"
+    echo ""
+    echo "    -v : Enable verbose logging."
+    echo ""
+    echo "    -@ : No ANSI escape sequences for color or prompts."
+    echo ""
+    exit $1
+}
+
+#===#===#===#===# Entry #===#===#===#===#
+Main() {
+    APPLET="$1"
+    #===#===#===> Applet:help
+    if [ "$APPLET" = "" ] || [ "$APPLET" = "help" ]; then
+        Packer_Usage 0
+    fi
+    
+    #===#===#===> Run any Applet
+    if [ -e "$DATA_DIR/Applets/$APPLET" ]; then
+        shift 1
+        exec "$DATA_DIR/Applets/$APPLET" "$@"
+    else
+    #===#===#===> Applet:???
+        Error "Unknown Applet \"$APPLET\"" $ERR_INVALID_OPTION
+    fi 
+    
+
+}
+
+Main "$@"; exit $?

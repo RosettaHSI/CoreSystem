@@ -1,0 +1,11 @@
+#===#===#===# Testing Utilities #===#===#===#
+OldDev
+RootFS
+ContainerEntry.sh
+RunContainer.sh
+#===#===#===# Internal Software #===#===#===#
+BuildData/CorePkgs/aarch64/*
+BuildData/CorePkgs/x86_64/*
+BuildData/CoreUtils/aarch64/*
+BuildData/CoreUtils/x86_64/*
+BuildData/Rosetta/System/Protected/*
