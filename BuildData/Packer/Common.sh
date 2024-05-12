@@ -93,14 +93,40 @@ EXEC_VER="0.0.1"
 # ANSI=true
 # VERBOSE=false
 
+#===#===#===#===# Generation Functions #===#===#===#===#
+MK_USER="root"
+MkSys() {
+    if [ $ANSI = true ]; then
+        install -m $1 -o $MK_USER -g $MK_USER -d "$2" \
+            && Log "Generated \"${TXT_UNDERLINE}${FG_YELLOW2}$2${OFF_UNDERLINE}${TXT_RESET}\"" \
+            || Error "Failed to generate directory \"$2\"" $ERR_NO_PERMISSION
+    else
+        install -m $1 -o $MK_USER -g $MK_USER -d "$2" \
+            && Log "Generated \"$2\"" \
+            || Error "Failed to generate directory \"$2\"" $ERR_NO_PERMISSION
+    fi
+}
+
+MkLnk() {
+    if [ $ANSI = true ]; then
+        ln -s "$1" "$2" \
+            && Log "Generated Link \"${TXT_UNDERLINE}${FG_YELLOW2}$2${TXT_OFFSET}${TXT_RESET}\" -> \"${TXT_UNDERLINE}${FG_YELLOW2}$1${TXT_OFFSET}${TXT_RESET}\"" \
+            || Error "Failed to generate link \"$2\" -> \"$1\"" $ERR_EXTERNAL_FAILURE
+    else
+        ln -s "$1" "$2" \
+            && Log "Generated Link \"$2\" -> \"$1\"" \
+            || Error "Failed to generate link \"$2\" -> \"$1\"" $ERR_EXTERNAL_FAILURE
+    fi
+}
+
 #===#===#===#===# Logging Routines #===#===#===#===#
 
 #===#===#===> For critical errors resulting in termination
 Error() {
-    [ $ANSI = true ] && printf "${BG_RED}${FG_WHITE}"
+    [ $ANSI = true ] && printf "${BG_RED}${FG_WHITE2}"
     printf " --- [X]: "
     printf " $1 | (Error $2) --- "
-    [ $ANSI = true ] && printf "${BG_BLACK}${FG_WHITE}${TXT_RESET}\n" \
+    [ $ANSI = true ] && printf "${BG_BLACK}${FG_WHITE2}${TXT_RESET}\n" \
                      || printf "\n"
     
     [ $2 = $ERR_NONE ] || exit "$2"
@@ -156,4 +182,38 @@ Info_Good() {
     printf " --- [+]: "
     [ $ANSI = true ] && printf "${BG_BLACK}${FG_WHITE}${TXT_RESET}"
     printf " $1\n"
+}
+
+#===#===#===> Prompt a text input
+PROMPT_TEXT_RESULT=""
+Prompt_Text() {
+    [ $ANSI = true ] && printf "${FG_GREY}"
+    printf " --- [?]: "
+    [ $ANSI = true ] && printf "${BG_BLACK}${FG_WHITE}${TXT_RESET}"
+    printf " $1" PROMPT_TEXT_RESULT
+}
+
+#===#===#===#===# Other Utilities #===#===#===#===#
+
+#===#===#===> Elevate Privileges
+Elevate() {
+    [ $(id -u) = 0 ] && return
+    
+    [ $ANSI = false ] && FG_GREY="" && FG_BLUE2="" && TXT_BOLD="" && TXT_RESET=""
+    PROMPT_A=$(Info "You may need administrator privileges to run this action.")
+    PROMPT_B=$(echo -e "${FG_GREY} --- [?]:${TXT_RESET}  Enter the password for ${TXT_BOLD}${FG_BLUE}${USER}${TXT_RESET}: ")
+    
+    PROMPT=$(echo "$PROMPT_A"; echo "$PROMPT_B")
+    APPLET=$1
+    shift 1
+    exec sudo -p "$PROMPT" -E -- "/System/Protected/Binaries/Rosetta/packer" "$APPLET" "$@"
+}
+
+#===#===#===> Validate a Packer environment
+Validate_Environ() { 
+    [ -d "$1" ]                  || return 1
+    [ -d "$1/.root" ]            || return 1
+    [ -d "$1/Binaries" ]         || return 1
+    
+    return 0
 }

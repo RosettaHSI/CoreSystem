@@ -1,5 +1,6 @@
 #===#===#===# Testing Utilities #===#===#===#
 OldDev
+OldRootFS
 RootFS
 ContainerEntry.sh
 RunContainer.sh
@@ -8,4 +9,4 @@ BuildData/CorePkgs/aarch64/*
 BuildData/CorePkgs/x86_64/*
 BuildData/CoreUtils/aarch64/*
 BuildData/CoreUtils/x86_64/*
-BuildData/Rosetta/System/Protected/*
+BuildData/Overlay/System/Protected/*

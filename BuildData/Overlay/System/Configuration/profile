@@ -26,6 +26,8 @@ export LD_LIBRARY_PATH="$LIB_LOCAL:$LIB_SYS:$LIB_PKG"
 #===== Setup generic variables =====# 
 export EDITOR=vim
 export PAGER=less
+alias  cls=clear
+alias  q=exit
 # If you wish to add your own variables, add them here.
 
 #===== Setup PS1 =====# 

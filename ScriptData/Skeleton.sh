@@ -52,7 +52,9 @@ Make_Skeleton() {
     MkSys 0755 "Mount/Drives"
     MkSys 0755 "Mount/Local"
     MkSys 0755 "System"
-    
+    MkSys 0755 "Users"
+    MkSys 0750 "Users/.root"
+
     #===#===#===> Populate /System
     MkSys 0755 "System/Configuration"
     
@@ -63,9 +65,6 @@ Make_Skeleton() {
     MkSys 0755 "System/Kernel/Modules"
     MkSys 0755 "System/Kernel/ProcessInfo"
     
-    MkSys 0755 "System/Local"           # FIXME: Get rid of these two.
-    MkSys 0755 "System/Local/AdminHome" # FIXME: Get rid of these two.
-
     MkSys 0755 "System/Protected/"
     MkSys 0755 "System/Protected/Binaries"
     MkSys 0755 "System/Protected/Headers"
@@ -112,12 +111,11 @@ Make_Skeleton() {
         MkLnk "System/Libraries"          "lib"
         MkLnk "System/Libraries/32Bit"    "lib32"
         MkLnk "System/Libraries/32Bit"    "lib64"
-        MkLnk "System/Libraries/Exec"     "libexec"
         MkLnk "Mount/Drives"              "media"
         MkLnk "Mount/Local"               "mnt"
         MkLnk "Packages/Local"            "opt"
         MkLnk "System/Kernel/ProcessInfo" "proc"
-        MkLnk "System/Local/AdminHome"    "root"
+	    MkLnk "Users/.root"               "root"
         MkLnk "System/Services/run"       "run"
         MkLnk "System/Binaries"           "sbin"
         MkLnk "System/Kernel/MachineInfo" "sys"
@@ -136,7 +134,7 @@ Make_Skeleton() {
         MkLnk "../System/PackageData"     "usr/share"
         MkSys 0755 "usr/local"
         MkLnk "../../Packages/Local/Binaries"        "usr/local/bin"
-        MkLnk "../../Packages/Local/include"         "usr/local/include"
+        MkLnk "../../Packages/Local/Headers"         "usr/local/include"
         MkLnk "../../Packages/Local/Libraries"       "usr/local/lib"
         MkLnk "../../Packages/Local/Libraries/32Bit" "usr/local/lib32"
         MkLnk "../../Packages/Local/Libraries/32Bit" "usr/local/lib64"

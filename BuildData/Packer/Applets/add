@@ -46,6 +46,50 @@ if [ ! "$DATA_DIR" ]; then
 fi
 [ $_PKG_COMMON_LOADED ] || . "$DATA_DIR/Common.sh"
 
+#===#===#===#===# Usage #===#===#===#===#
+Usage() {
+    echo ""
+    echo "$EXEC_NAME v$EXEC_VER - The Link applet for Packer."
+    echo "  Copyright 2024 - Rosetta HSI. This software comes with absolutely"
+    echo "  NO WARRANTY and is released under the MIT License."
+    echo ""
+    echo "  This utility is automatically ran after \"packer add\" and \"packer remove\""
+    echo "  It is used to make installed packages available to the Orion Operating System."
+    echo ""
+    echo "  --- Usage: $PACKER_EXEC_NAME $EXEC_NAME [options...]"
+    echo "       $ $PACKER_EXEC_NAME $EXEC_NAME -v"
+    echo "       $ $PACKER_EXEC_NAME $EXEC_NAME -o /Packages"
+    echo ""
+    echo "  --- Link Flags:"
+    echo "    -o : The path to the Packer environment. By default, this will be \"/Packages\""
+    echo ""
+    echo "  --- Global Flags:"
+    echo "    -h : Display this Help message."
+    echo ""
+    echo "    -Y : Automatically answers \"y\" to all prompts. DANGEROUS!"
+    echo ""
+    echo "    -v : Enable verbose logging."
+    echo ""
+    echo "    -@ : No ANSI escape sequences for color or prompts."
+    echo ""
+    exit $1
+}
+
+#===#===#===#===# Read options from cmdline #===#===#===#===#
+Get_Options() {
+    while getopts @hvYo: flag
+    do
+        case "${flag}" in
+            @) ANSI=false;;
+            h) Build_Usage 0;;
+            v) VERBOSE=true;;
+            Y) AUTOYES=true;;
+            o) PACKERDIR="${OPTARG}";;
+            *) Usage $ERR_INVALID_OPTION;;
+        esac
+    done
+}
+
 #===#===#===#===# Entry #===#===#===#===#
 Main() {
     Info "$EXEC_NAME $1 $2 $3"

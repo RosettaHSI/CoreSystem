@@ -44,44 +44,47 @@ Print_Applets() {
     for APPLET in $APPLETS; do
         APPLET_INFO=$("$DATA_DIR/Applets/$APPLET" --info)
         line='        :'
-        printf "    %s %s %s\n" $APPLET "${line:${#APPLET}}" "$APPLET_INFO"
+        printf "    ${TXT_BOLD}%s %s ${TXT_RESET}%s\n" $APPLET "${line:${#APPLET}}" "$APPLET_INFO"
     
     done
 }
 
 #===#===#===#===# Usage #===#===#===#===#
 Packer_Usage() {
-    echo ""
-    echo "$EXEC_NAME v$EXEC_VER - The Package Manager for the Orion Operating System."
-    echo "  Copyright 2024 - Rosetta HSI. This software comes with absolutely"
-    echo "  NO WARRANTY and is released under the MIT License."
-    echo ""
-    echo "  This utility is a front-end for the Alpine Package Keeper"
-    echo "         ($APK_VERSION)"
-    echo ""
-    echo "  --- Usage: $EXEC_NAME <Applet> [options...]"
-    echo "       $ $EXEC_NAME add fortune -v"
-    echo "       $ $EXEC_NAME remove coreutils -Y"
-    # echo -e "  --- Usage: ${FG_GREEN2}$EXEC_NAME ${FG_RED2}<Applet>${TXT_RESET} [options...]"
-    # echo -e "       ${FG_BLUE2}$ ${FG_GREEN2}${EXEC_NAME} ${FG_RED2}add${TXT_RESET} fortune ${FG_YELLOW2}-v${TXT_RESET}"
-    # echo -e "       ${FG_BLUE2}$ ${FG_GREEN2}${EXEC_NAME} ${FG_RED2}remove${TXT_RESET} coreutils ${FG_YELLOW2}-Y${TXT_RESET}"
-    echo ""
-    echo "  --- Applets:"
+    if [ $ANSI = false ]; then
+        local TXT_BOLD=""
+        local TXT_RESET=""
+        local TXT_UNDERLINE=""
+        local OFF_UNDERLINE=""
+    fi
+    echo -e ""
+    echo -e "${TXT_BOLD}${EXEC_NAME} v${EXEC_VER} -${TXT_RESET} The Package Manager for the Orion Operating System."
+    echo -e "  Copyright 2024 - Rosetta HSI. This software comes with absolutely"
+    echo -e "  NO WARRANTY and is released under the MIT License."
+    echo -e ""
+    echo -e "  This utility is a front-end for the Alpine Package Keeper"
+    echo -e "         (${TXT_UNDERLINE}${APK_VERSION}${OFF_UNDERLINE})"
+    echo -e ""
+    echo -e "  ${TXT_BOLD}--- Usage: $EXEC_NAME <Applet> [options...]"
+    echo -e "       $ $EXEC_NAME add fortune -v"
+    echo -e "       $ $EXEC_NAME remove coreutils -Y${TXT_RESET}"
+    echo -e ""
+    echo -e "  ${TXT_BOLD}--- Applets:${TXT_RESET}"
     Print_Applets
-    # echo "    add    : Add Packages from selected Repositories."
-    # echo "    remove : Remove Packages installed on this System."
-    # echo "    search : Search for Packages with a given search term."
-    # echo "    fetch  : Download Packages directly from selected Repositories."
-    echo ""
-    echo "  --- Global Flags:"
-    echo "    -h : Display this Help message."
-    echo ""
-    echo "    -Y : Automatically answers \"y\" to all prompts. DANGEROUS!"
-    echo ""
-    echo "    -v : Enable verbose logging."
-    echo ""
-    echo "    -@ : No ANSI escape sequences for color or prompts."
-    echo ""
+    # echo -e "    add    : Add Packages from selected Repositories."
+    # echo -e "    remove : Remove Packages installed on this System."
+    # echo -e "    search : Search for Packages with a given search term."
+    # echo -e "    fetch  : Download Packages directly from selected Repositories."
+    echo -e ""
+    echo -e "  ${TXT_BOLD}--- Global Flags:"
+    echo -e "    ${TXT_BOLD}-h :${TXT_RESET} Display this Help message."
+    echo -e ""
+    echo -e "    ${TXT_BOLD}-Y :${TXT_RESET} Automatically answers \"y\" to all prompts. DANGEROUS!"
+    echo -e ""
+    echo -e "    ${TXT_BOLD}-v :${TXT_RESET} Enable verbose logging."
+    echo -e ""
+    echo -e "    ${TXT_BOLD}-@ :${TXT_RESET} No ANSI escape sequences for color or prompts. "
+    echo -e ""
     exit $1
 }
 
@@ -89,13 +92,14 @@ Packer_Usage() {
 Main() {
     APPLET="$1"
     #===#===#===> Applet:help
-    if [ "$APPLET" = "" ] || [ "$APPLET" = "help" ]; then
+    if [ "$APPLET" = "" ] || [ "$APPLET" = "help" ] || [ "$APPLET" = "-h" ]; then
         Packer_Usage 0
     fi
     
     #===#===#===> Run any Applet
     if [ -e "$DATA_DIR/Applets/$APPLET" ]; then
         shift 1
+        export PACKER_EXEC_NAME="$EXEC_NAME"
         exec "$DATA_DIR/Applets/$APPLET" "$@"
     else
     #===#===#===> Applet:???

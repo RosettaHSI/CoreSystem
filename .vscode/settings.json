@@ -1,0 +1,10 @@
+{
+    "C_Cpp.default.compilerPath": "/usr/bin/cc",
+    "files.associations": {
+        "stdio.h": "c",
+        "stdlib.h": "c",
+        "unistd.h": "c",
+        "libgen.h": "c",
+        "sched.h": "c"
+    }
+}

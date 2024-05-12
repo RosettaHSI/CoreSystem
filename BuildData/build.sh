@@ -30,7 +30,7 @@
 
 #===#===#===#===# OS Metadata #===#===#===#===#q
 Build_Metadata() {
-cat <<-EOF > "Rosetta/System/Protected/Static/OSInfo"
+cat <<-EOF > "Overlay/System/Protected/Static/OsInfo"
     ID="$OS_ID"
     NAME="$OS_NAME"
     LOGO="$OS_LOGO"
@@ -113,10 +113,10 @@ Install_Files() {
     # Transfer from Rosetta
     [ "$OS_ROOTFS" ]       || return 10
     [ "$OS_ROOTFS" = "/" ] && return 11
-    cp -adfvL "Rosetta/"* "$OS_ROOTFS/"
+    cp --archive -adfvL "Overlay/"* "$OS_ROOTFS/"
     # Perform some fixes cause this shit is broken
     rm "$OS_ROOTFS/System/Configuration/os-release"
-    ln -s "../Protected/Static/OSInfo" "$OS_ROOTFS/System/Configuration/os-release"
+    ln -s "../Protected/Static/OsInfo" "$OS_ROOTFS/System/Configuration/os-release"
 }
 
 #===#===#===#===# Entry Point #===#===#===#===#

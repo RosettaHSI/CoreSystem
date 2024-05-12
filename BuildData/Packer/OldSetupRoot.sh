@@ -93,23 +93,13 @@ Run_Mounts() {
     local MOUNT_FLAGS="--bind"
     local UMOUNT_FLAGS="-lf"
 
-    local ROOTDIR=$(realpath "$ROOTDIR")
-
-    # WARNING #
-    # $ROOTDIR MUST BE AN ABSOLUTE PATH!
-
     if [ "$1" = "--mount" ]; then
         Log "Running Mount actions for \"$ROOTDIR/.root\""
-        [ -d "/Applications" ] && mount $MOUNT_FLAGS "/Applications" "$ROOTDIR/.root/Applications"
-        [ -d "/Mount" ]        && mount $MOUNT_FLAGS "/Mount"        "$ROOTDIR/.root/Mount"
-        [ -d "/Packages" ]     && mount $MOUNT_FLAGS "/Packages"     "$ROOTDIR/.root/Packages/"
-        [ -d "/System" ]       && mount $MOUNT_FLAGS "/System"       "$ROOTDIR/.root/System"
-        [ -d "/Users" ]        && mount $MOUNT_FLAGS "/Users"        "$ROOTDIR/.root/Users"
-        
-        #===#===#===> Mount packerenv over the packer directory
-        [ -d "$ROOTDIR/.root/.packerenv" ] \
-            && mount $MOUNT_FLAGS "$ROOTDIR/.root/.packerenv" \
-                                  "$ROOTDIR/.root/$ROOTDIR"
+        [ -d "/Applications" ]   && mount $MOUNT_FLAGS "/Applications" "$ROOTDIR/.root/Applications"
+        [ -d "/Mount" ]          && mount $MOUNT_FLAGS "/Mount" "$ROOTDIR/.root/Mount"
+        [ -d "/Packages/Local" ] && mount $MOUNT_FLAGS "/Packages/Local" "$ROOTDIR/.root/Packages/Local"
+        [ -d "/System" ]         && mount $MOUNT_FLAGS "/System" "$ROOTDIR/.root/System"
+        [ -d "/Users" ]          && mount $MOUNT_FLAGS "/Users" "$ROOTDIR/.root/Users"
         return
     fi
 
@@ -117,20 +107,15 @@ Run_Mounts() {
         Log "Running Unmount actions for \"$ROOTDIR/.root\""
         [ -d "/Applications" ]   && umount $UMOUNT_FLAGS "$ROOTDIR/.root/Applications"   2> /dev/null
         [ -d "/Mount" ]          && umount $UMOUNT_FLAGS "$ROOTDIR/.root/Mount"          2> /dev/null
-        [ -d "/Packages" ]       && umount $UMOUNT_FLAGS "$ROOTDIR/.root/Packages"       2> /dev/null
+        [ -d "/Packages/Local" ] && umount $UMOUNT_FLAGS "$ROOTDIR/.root/Packages/Local" 2> /dev/null
         [ -d "/System" ]         && umount $UMOUNT_FLAGS "$ROOTDIR/.root/System"         2> /dev/null
         [ -d "/Users" ]          && umount $UMOUNT_FLAGS "$ROOTDIR/.root/Users"          2> /dev/null
-        
-        #===#===#===> Detach packerenv
-        [ -d "$ROOTDIR/.root/.packerenv" ] \
-            && umount $UMOUNT_FLAGS "$ROOTDIR/.root/$ROOTDIR" 2> /dev/null
 
         Validate_Umount "$ROOTDIR/.root/Applications"
         Validate_Umount "$ROOTDIR/.root/Mount"
-        Validate_Umount "$ROOTDIR/.root/Packages"
+        Validate_Umount "$ROOTDIR/.root/Packages/Local"
         Validate_Umount "$ROOTDIR/.root/System"
         Validate_Umount "$ROOTDIR/.root/Users"
-        Validate_Umount "$ROOTDIR/.root/$ROOTDIR"
         return
     fi
 
@@ -150,10 +135,9 @@ Delete_Root() {
     cd "$ROOTDIR/.root" || Error "Failed to CD into \"$ROOTDIR/.root\"" $ERR_EXTERNAL_FAILURE
     [ -d "Applications" ]   && umount -fl "Applications"   2> /dev/null
     [ -d "Mount" ]          && umount -fl "Mount"          2> /dev/null
-    [ -d "Packages" ]       && umount -fl "Packages"       2> /dev/null
+    [ -d "Packages/Local" ] && umount -fl "Packages/Local" 2> /dev/null
     [ -d "System" ]         && umount -fl "System"         2> /dev/null
     [ -d "Users" ]          && umount -fl "Users"          2> /dev/null
-    [ -d "$ROOTDIR" ]       && umount $UMOUNT_FLAGS "$ROOTDIR/.root/$ROOTDIR"       2> /dev/null
 
     #===#===#===> Validate umounts have occured.
     # These directories should ALL be empty if unmounted.
@@ -184,66 +168,70 @@ Build_Root() {
     
     #===#===#===> Populate / (Packer root)
     # We are now in the Packer root.
+    touch ".packerenv" # If you ever see this at / then you are in a packerenv!
     [ -d "/Applications" ] && MkSys 0755 "Applications"   # Orion
     [ -d "/Mount" ]        && MkSys 0755 "Mount"          # CoreSystem
     [ -d "/Packages" ]     && MkSys 0755 "Packages"       # CoreSystem
-    # [ -d "/Packages" ]     && MkSys 0755 "Packages/Local" # CoreSystem
+    [ -d "/Packages" ]     && MkSys 0755 "Packages/Local" # CoreSystem
     [ -d "/System" ]       && MkSys 0755 "System"         # CoreSystem
-    [ -d "/Users" ]        && MkSys 0755 "Users"          # CoreSystem
-    #===#===#===> Populate internal Package Environment
-    MkSys 0755 ".packerenv" # If you ever see this at / then you are in Packer!
-    MkSys 0755 ".sysroot"   # Expose the REAL filesystem to Packer.
-    MkSys 0755 ".rawenv"    # Expose the REAL Packer directory to the env.
-    MkSys 0755 ".packerenv/.root/etc/"
-    MkSys 0755 ".packerenv/.root/etc/apk/keys"
-    MkSys 0755 ".packerenv/.root/bin/"
-    MkSys 0755 ".packerenv/.root/sbin/"
-    MkSys 0755 ".packerenv/.root/lib/"
-    MkSys 0755 ".packerenv/.root/lib32/"
-    MkSys 0755 ".packerenv/.root/lib64/"
-    MkSys 0755 ".packerenv/.root/usr/"
-    MkSys 0755 ".packerenv/.root/usr/include"
-    MkSys 0755 ".packerenv/.root/usr/share"
-    MkSys 0755 ".packerenv/.root/usr/bin"
-    MkSys 0755 ".packerenv/.root/usr/sbin"
-    MkSys 0755 ".packerenv/.root/usr/lib"
-    MkSys 0755 ".packerenv/.root/usr/lib32"
-    MkSys 0755 ".packerenv/.root/usr/lib64"
-    MkSys 0755 ".packerenv/.root/usr/libexec"
-    MkLnk "../lib32"   ".packerenv/.root/lib/32Bit"
-    MkLnk "../lib64"   ".packerenv/.root/lib/64Bit"
-    MkLnk "../lib32"   ".packerenv/.root/usr/lib/32Bit"
-    MkLnk "../lib64"   ".packerenv/.root/usr/lib/64Bit"
-    MkLnk "../../lib"  ".packerenv/.root/usr/lib/Core"
-    MkLnk "../libexec" ".packerenv/.root/usr/lib/Exec"
-    ### TODO: Add 'local' entries..
-    #===#===#===> Populate exposable Packages directory.
-    MkSys 0755                 ".packerenv/Binaries"
-    MkLnk ".root/etc"          ".packerenv/Configuration"
-    MkLnk ".root/usr/include"  ".packerenv/Headers"
-    MkLnk ".root/usr/lib"      ".packerenv/Libraries"
-    MkLnk ".root/usr/share"    ".packerenv/PackageData"
-    MkLnk ".root/etc/apk/keys" ".packerenv/Keys"
+    [ -d "/Users" ]        && MkSys 0755 "Users"          # Orion
+    #===#===#===> Populate internal /Packages
+    MkSys 0755 "Packages/Binaries"
+    MkSys 0755 "Packages/Configuration"
+    MkSys 0755 "Packages/Headers"
+    MkSys 0755 "Packages/Libraries"
+    MkSys 0755 "Packages/Libraries/32Bit"
+    MkSys 0755 "Packages/Libraries/64Bit"
+    MkSys 0755 "Packages/Libraries/Core"
+    MkSys 0755 "Packages/Libraries/Exec"
+    MkSys 0755 "Packages/PackageData"
+    MkSys 0755 "Packages/Keys"
+    MkSys 0755 "Packages/.internalbin" # Keeps everything together
+    MkSys 0755 "Packages/.internalbin/bin"
+    # MkSys 0755 "Packages/.internalbin/sbin"
+    MkSys 0755 "Packages/.internalbin/alt-bin"
+    # MkSys 0755 "Packages/.internalbin/alt-sbin"
     #===#===#===> Populate modified FHS in /
     # Populate top level / 
-    MkLnk ".packerenv/.root/bin"         "bin"
-    MkLnk "System/Kernel/BootInfo"       "boot"
-    MkLnk "System/Kernel/DevicesInfo"    "dev"
-    MkLnk ".packerenv/.root/etc"         "etc"
-    MkLnk ".packerenv/.root/lib"         "lib"
-    MkLnk ".packerenv/.root/lib32"       "lib32"
-    MkLnk ".packerenv/.root/lib64"       "lib64"
-    MkLnk "Mount/Drives"                 "media"
-    MkLnk "Mount/Local"                  "mnt"
-    # MkLnk "Packages/Local"               "opt"
-    MkLnk "System/Kernel/ProcessInfo"    "proc"
-    MkLnk "Users/.root"                  "root"
-    MkLnk "System/Services/run"          "run"
-    MkLnk ".packerenv/.root/sbin"        "sbin"
-    MkLnk "System/Kernel/MachineInfo"    "sys"
-    MkLnk "System/Temporary"             "tmp"
-    MkLnk "System/Services"              "var"
-    MkLnk ".packerenv/.root/usr"         "usr"
+    MkLnk "Packages/.internalbin/bin"  "bin"
+    MkLnk "System/Kernel/BootInfo"     "boot"
+    MkLnk "System/Kernel/DevicesInfo"  "dev"
+    MkLnk "Packages/Configuration"     "etc"
+    MkLnk "Packages/Libraries/Core"    "lib"
+    MkLnk "Packages/Libraries/32Bit"   "lib32"
+    MkLnk "Packages/Libraries/32Bit"   "lib64"
+    MkLnk "Packages/Libraries/Exec"    "libexec"
+    MkLnk "Mount/Drives"               "media"
+    MkLnk "Mount/Local"                "mnt"
+    MkLnk "Packages/Local"             "opt"
+    MkLnk "System/Kernel/ProcessInfo"  "proc"
+    MkLnk "System/Local/AdminHome"     "root"
+    MkLnk "System/Services/run"        "run"
+    MkLnk "Packages/.internalbin/bin"  "sbin"
+    # MkLnk "Packages/.internalbin/sbin" "sbin"
+    MkLnk "System/Kernel/MachineInfo"  "sys"
+    MkLnk "System/Temporary"           "tmp"
+    MkLnk "System/Services"            "var"
+    # Populate /usr
+    MkSys 0755 "usr"
+    MkLnk "../Packages/.internalbin/alt-bin"  "usr/bin"
+    MkLnk "../Packages/Headers"               "usr/include"
+    MkLnk "../Packages/Libraries"             "usr/lib"
+    MkLnk "../Packages/Libraries/32Bit"       "usr/lib32"
+    MkLnk "../Packages/Libraries/32Bit"       "usr/lib64"
+    MkLnk "../Packages/Libraries/Exec"        "usr/libexec"
+    MkLnk "../Packages/.internalbin/alt-bin"  "usr/sbin"
+    # MkLnk "../Packages/.internalbin/alt-sbin" "usr/sbin"
+    MkLnk "../Packages/PackageData"           "usr/share"
+    MkSys 0755 "usr/local"
+    MkLnk "../../Packages/Local/Binaries"        "usr/local/bin"
+    MkLnk "../../Packages/Local/Headers"         "usr/local/include"
+    MkLnk "../../Packages/Local/Libraries"       "usr/local/lib"
+    MkLnk "../../Packages/Local/Libraries/32Bit" "usr/local/lib32"
+    MkLnk "../../Packages/Local/Libraries/32Bit" "usr/local/lib64"
+    MkLnk "../../Packages/Local/Libraries/Exec"  "usr/local/libexec"
+    MkLnk "../../Packages/Local/Binaries"        "usr/local/sbin"
+    MkLnk "../../Packages/Local/PackageData"     "usr/local/share"
 
     #===#===#===> Dump Repositories
     for REPO in $DEFAULT_REPOS; do
@@ -252,32 +240,21 @@ Build_Root() {
         else
             Info "Using Repository \"$REPO\""
         fi
-        echo "$REPO" >> ".packerenv/Repositories"
-        ln -s "../../../Repositories" ".packerenv/.root/etc/apk/repositories"
+        echo "$REPO" >> "Packages/Repositories"
     done
 
-    # #===#===#===> Copy the CoreUtils
-    cp "$DATA_DIR/apk.static"    ".packerenv/.root/apk" \
-        || Error "Failed to copy apk.static to Packer Environment \"$ROOTDIR\"" $ERR_NO_PERMISSION
-    cp "$DATA_DIR/CoreUtils.tar" "CoreUtils.tar" \
-        || Error "Failed to copy CoreUtils to Packer Environment \"$ROOTDIR\"" $ERR_NO_PERMISSION
+    #===#===#===> Copy the CoreUtils
+    cp "$DATA_DIR/apk.static"    ".apk"          || Error "Failed to copy apk.static to Packer root \"$ROOTDIR/.root/\"" $ERR_NO_PERMISSION
+    cp "$DATA_DIR/CoreUtils.tar" "CoreUtils.tar" || Error "Failed to copy CoreUtils to Packer root \"$ROOTDIR/.root/\"" $ERR_NO_PERMISSION
 
     #===#===#===> Install CoreUtils
     Info "Installing CoreUtils"
     tar -xf "CoreUtils.tar" && rm "CoreUtils.tar"
-    ln -s "busybox.static" "bin/busybox"
-    ln -s "busybox.static" "bin/sh"
     #===#===#===> Install Alpine Package Keeper
     Info "Installing Alpine Package Keeper"
     Run_Mounts --mount # Remember this!
     
-
-    [ $VERBOSE = true ]  \
-        && _APK_FLAGS="" \
-        || _APK_FLAGS="-q"
-    
-    chroot "." /.packerenv/.root/apk --initdb add $_APK_FLAGS
-    # ranger .
+    chroot "." /.apk --initdb add -q
     if [ ! "$?" = 0 ]; then
         Error "Failed to initialise Alpine Package Keeper service. Your installation will not work." $ERR_NONE
         Run_Mounts --unmount
@@ -286,11 +263,11 @@ Build_Root() {
 
     #===#===#===> Set up APK Keys
     Info "Setting up Keys"
-    # MkLnk "../../Keys" "Packages/Configuration/apk/keys"
+    MkLnk "../../Keys" "Packages/Configuration/apk/keys"
     # Cheap & dirty trick
-    cp "/etc/resolv.conf" ".packerenv/Configuration" # Remove this later!
+    cp "/etc/resolv.conf" "Packages/Configuration/" # Remove this later!
     chroot "." \
-        /.packerenv/.root/apk -X "http://dl-cdn.alpinelinux.org/alpine/latest-stable/main/" \
+        /.apk -X "http://dl-cdn.alpinelinux.org/alpine/latest-stable/main/" \
         --allow-untrusted \
         add alpine-keys -q
     if [ ! "$?" = 0 ]; then
@@ -299,19 +276,18 @@ Build_Root() {
         exit $ERR_EXTERNAL_FAILURE
     fi
 
-    rm ".packerenv/Configuration/resolv.conf"
     Run_Mounts --unmount # Safe!
 
     #===#===#===> Create the symlinks for /Packages
     cd "$ROOTDIR" || Error "Failed to CD into \"$ROOTDIR\"" $ERR_EXTERNAL_FAILURE
 
-    MkSys 0755                             "Binaries"
-    MkLnk ".root/.packerenv/Configuration" "Configuration"
-    MkLnk ".root/.packerenv/Headers"       "Headers"
-    MkLnk ".root/.packerenv/Keys"          "Keys"
-    MkLnk ".root/.packerenv/Libraries"     "Libraries"
-    MkLnk ".root/.packerenv/PackageData"   "PackageData"
-    MkLnk ".root/.packerenv/Repositories"  "Repositories"
+    MkSys 0755                           "Binaries"
+    MkLnk ".root/Packages/Configuration" "Configuration"
+    MkLnk ".root/Packages/Headers"       "Headers"
+    MkLnk ".root/Packages/Keys"          "Keys"
+    MkLnk ".root/Packages/Libraries"     "Libraries"
+    MkLnk ".root/Packages/PackageData"   "PackageData"
+    MkLnk ".root/Packages/Repositories"  "Repositories"
 }
 
 #===#===#===#===# Entry Point #===#===#===#===#
@@ -329,7 +305,6 @@ Main() {
     [ "$ROOTDIR" = "/System" ] && Error "The specified directory cannot your System folder \"$ROOTDIR\"" $ERR_INVALID_OPTION
     
     #===#===#===> Begin generating the Root environment
-    # [ "$SUDO_USER" ] && export MK_USER="$SUDO_USER"
     [ -d "$ROOTDIR/.root" ]&& Delete_Root
     Build_Root
 
