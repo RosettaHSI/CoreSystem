@@ -51,7 +51,7 @@ void Usage(const char* ExecName)
     printf("\n");
     printf("  --- Usage: %s /Packages/Binaries/program_name\n", ExecName);
     printf("\n");
-    printf("  --- Usage: %s /Packages /bin/sh\n", ExecName);
+    printf("  --- Usage: %s -M /Packages /bin/sh\n", ExecName);
     printf("\n");
     exit(1);
 }
@@ -302,6 +302,7 @@ unsigned Parse_Normal(uid_t UID,
     }
 
     /// Run Program
+    // printf("Packer Path: %s\nProgram Path: %s\n", Packer_Path, Program_Path);
     Run_Program(UID, Packer_Path, Program_Path, Program_Args);
 
     return 0;
@@ -339,12 +340,12 @@ int main(int argc, const char** argv) {
 ///////////////////////////////////////////////////////////////////////
     bool MANUAL_EXECUTION = false;
     unsigned Error;
-    if ( argc >= 3 )
+    if ( argv[1][0] == '-' && argv[1][1] == 'M' )
         MANUAL_EXECUTION = true;
 
 /// Run Program
     if ( MANUAL_EXECUTION )
-        Error = Parse_Manual(UID, argv[1], argv[2], argv + 2);
+        Error = Parse_Manual(UID, argv[2], argv[3], argv + 3);
     else
         Error = Parse_Normal(UID, argv[1], argv + 1);
 
