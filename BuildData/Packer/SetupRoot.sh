@@ -216,6 +216,7 @@ Build_Root() {
     MkLnk "../lib64"   ".packerenv/.root/usr/lib/64Bit"
     MkLnk "../../lib"  ".packerenv/.root/usr/lib/Core"
     MkLnk "../libexec" ".packerenv/.root/usr/lib/Exec"
+    MkLnk "/System/Libraries/sudo" ".packerenv/.root/usr/lib/sudo" # Compat
     ### TODO: Add 'local' entries..
     #===#===#===> Populate exposable Packages directory.
     MkSys 0755                 ".packerenv/Binaries"
@@ -268,7 +269,7 @@ Build_Root() {
     ln -s "busybox.static" "bin/busybox"
     ln -s "busybox.static" "bin/sh"
     #===#===#===> Install Alpine Package Keeper
-    Info "Installing Alpine Package Keeper"
+    Info "Installing Alpine Package Keeper. Sometimes this may take a while."
     Run_Mounts --mount # Remember this!
     
 

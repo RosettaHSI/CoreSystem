@@ -78,6 +78,55 @@ export BG_MAGENTA2="\033[105m"
 export BG_CYAN2="\033[106m"
 export BG_WHITE2="\033[107m"
 
+#===#===#===#===# Remove ALL colours #===#===#===#===#
+No_ANSI() {
+    ANSI=false
+    CMD_CLS=""
+    CMD_BELL=""
+    TXT_RESET=""
+    TXT_BOLD=""
+    OFF_BOLD=""
+    TXT_DIM=""
+    OFF_DIM=""
+    TXT_ITALIC=""
+    OFF_ITALIC=""
+    TXT_UNDERLINE=""
+    OFF_UNDERLINE=""
+    TXT_CROSS=""
+    FG_BLACK=""
+    FG_RED=""
+    FG_GREEN=""
+    FG_YELLOW=""
+    FG_BLUE=""
+    FG_MAGENTA=""
+    FG_CYAN=""
+    FG_WHITE=""
+    FG_GREY=""
+    FG_RED2=""
+    FG_GREEN2=""
+    FG_YELLOW2=""
+    FG_BLUE2=""
+    FG_MAGENTA2=""
+    FG_CYAN2=""
+    FG_WHITE2=""
+    BG_BLACK=""
+    BG_RED=""
+    BG_GREEN=""
+    BG_YELLOW=""
+    BG_BLUE=""
+    BG_MAGENTA=""
+    BG_CYAN=""
+    BG_WHITE=""
+    BG_GREY=""
+    BG_RED2=""
+    BG_GREEN2=""
+    BG_YELLOW2=""
+    BG_BLUE2=""
+    BG_MAGENTA2=""
+    BG_CYAN2=""
+    BG_WHITE2=""
+}
+
 #===#===#===#===# ERRORS #===#===#===#===#
 export ERR_NONE=0
 export ERR_EXTERNAL_FAILURE=100
@@ -199,7 +248,6 @@ Prompt_Text() {
 Elevate() {
     [ $(id -u) = 0 ] && return
     
-    [ $ANSI = false ] && FG_GREY="" && FG_BLUE2="" && TXT_BOLD="" && TXT_RESET=""
     PROMPT_A=$(Info "You may need administrator privileges to run this action.")
     PROMPT_B=$(echo -e "${FG_GREY} --- [?]:${TXT_RESET}  Enter the password for ${TXT_BOLD}${FG_BLUE}${USER}${TXT_RESET}: ")
     
