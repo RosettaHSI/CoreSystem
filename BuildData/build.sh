@@ -53,7 +53,7 @@ Make_TmpRoot() {
     mkdir "$TMP_ROOTFS"
     mkdir "$TMP_ROOTFS/etc"
 
-    cp /etc/resolv.conf "$TMP_ROOTFS/etc/resolv.conf"
+    # cp /etc/resolv.conf "$TMP_ROOTFS/etc/resolv.conf"
 
     # Install the CoreUtils
     cp -r "CoreUtils/$BUILD_ARCH/bin" "$TMP_ROOTFS"
@@ -114,9 +114,14 @@ Install_Files() {
     [ "$OS_ROOTFS" ]       || return 10
     [ "$OS_ROOTFS" = "/" ] && return 11
     cp --archive -adfvL "Overlay/"* "$OS_ROOTFS/"
+    
     # Perform some fixes cause this shit is broken
     rm "$OS_ROOTFS/System/Configuration/os-release"
     ln -s "../Protected/Static/OsInfo" "$OS_ROOTFS/System/Configuration/os-release"
+    
+    # Pack CoreUtils
+    tar czf "$OS_ROOTFS/System/Static/CoreUtils.tar.gz"     -C "CoreUtils/$BUILD_ARCH/"     .
+    tar czf "$OS_ROOTFS/System/Static/CoreUtils.fhs.tar.gz" -C "CoreUtils.fhs/$BUILD_ARCH/" .
 }
 
 #===#===#===#===# Entry Point #===#===#===#===#

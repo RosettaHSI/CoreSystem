@@ -9,4 +9,6 @@ BuildData/CorePkgs/aarch64/*
 BuildData/CorePkgs/x86_64/*
 BuildData/CoreUtils/aarch64/*
 BuildData/CoreUtils/x86_64/*
+BuildData/CoreUtils.fhs/aarch64/*
+BuildData/CoreUtils.fhs/x86_64/*
 BuildData/Overlay/System/Protected/*
